@@ -5,9 +5,9 @@ import (
 
 	"fmt"
 
-	"github.com/aprendagolang/api-pgsql/configs"
+	"../configs"
 
-	_ "github.com/lib/pq"
+	_"github.com/lib/pq"
 )
 
 
