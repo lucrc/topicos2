@@ -6,7 +6,7 @@ import (
     "github.com/gorilla/mux"
 )
 
-// Router is exported and used in main.go
+// O roteador é exportado e usado em main.go
 func Router() *mux.Router {
 
     router := mux.NewRouter()

@@ -253,53 +253,53 @@ func getUser(id int64) (models.User, error) {
 
     switch err {
     case sql.ErrNoRows:
-        fmt.Println("No rows were returned!")
+        fmt.Println("Nenhuma linha foi retornada!")
         return user, nil
     case nil:
         return user, nil
     default:
-        log.Fatalf("Unable to scan the row. %v", err)
+        log.Fatalf("Não foi possível verificar a linha. %v", err)
     }
 
-    // return empty user on error
+    // retornar usuário vazio em caso de erro
     return user, err
 }
 
-// get one user from the DB by its userid
+// obtenha todos os usuários do banco de dados.
 func getAllUsers() ([]models.User, error) {
-    // create the postgres db connection
+    // crie a conexão postgres db
     db := createConnection()
 
-    // close the db connection
+    // feche a conexão db
     defer db.Close()
 
     var users []models.User
 
-    // create the select sql query
+    // crie a consulta sql selecionada
     sqlStatement := `SELECT * FROM users`
 
-    // execute the sql statement
+    // execute a instrução SQL
     rows, err := db.Query(sqlStatement)
 
     if err != nil {
-        log.Fatalf("Unable to execute the query. %v", err)
+        log.Fatalf("Não foi possível executar a consulta. %v", err)
     }
 
-    // close the statement
+    // feche a declaração
     defer rows.Close()
 
-    // iterate over the rows
+    // iterar sobre as linhas
     for rows.Next() {
         var user models.User
 
-        // unmarshal the row object to user
+        // desempacotar o objeto de linha para o usuário
         err = rows.Scan(&user.ID, &user.Name, &user.Age, &user.Location)
 
         if err != nil {
-            log.Fatalf("Unable to scan the row. %v", err)
+            log.Fatalf("Não foi possível verificar a linha. %v", err)
         }
 
-        // append the user in the users slice
+        // anexe o usuário na fatia de usuários
         users = append(users, user)
 
     }
@@ -308,64 +308,64 @@ func getAllUsers() ([]models.User, error) {
     return users, err
 }
 
-// update user in the DB
+// atualizar usuário no banco de dados
 func updateUser(id int64, user models.User) int64 {
 
-    // create the postgres db connection
+    // crie a conexão postgres db
     db := createConnection()
 
-    // close the db connection
+    // feche a conexão db
     defer db.Close()
 
-    // create the update sql query
+    // crie a consulta sql de atualização
     sqlStatement := `UPDATE users SET name=$2, location=$3, age=$4 WHERE userid=$1`
 
-    // execute the sql statement
+    // execute a instrução SQL
     res, err := db.Exec(sqlStatement, id, user.Name, user.Location, user.Age)
 
     if err != nil {
-        log.Fatalf("Unable to execute the query. %v", err)
+        log.Fatalf("Não foi possível executar a consulta. %v", err)
     }
 
-    // check how many rows affected
+    // verifique quantas linhas afetadas
     rowsAffected, err := res.RowsAffected()
 
     if err != nil {
-        log.Fatalf("Error while checking the affected rows. %v", err)
+        log.Fatalf("Erro ao verificar as linhas afetadas. %v", err)
     }
 
-    fmt.Printf("Total rows/record affected %v", rowsAffected)
+    fmt.Printf("Total de linhas/registros afetados %v", rowsAffected)
 
     return rowsAffected
 }
 
-// delete user in the DB
+// excluir usuário no banco de dados
 func deleteUser(id int64) int64 {
 
-    // create the postgres db connection
+    // crie a conexão postgres db
     db := createConnection()
 
-    // close the db connection
+    // feche a conexão db
     defer db.Close()
 
-    // create the delete sql query
+    // crie a consulta sql de exclusão
     sqlStatement := `DELETE FROM users WHERE userid=$1`
 
-    // execute the sql statement
+    // execute a instrução SQL
     res, err := db.Exec(sqlStatement, id)
 
     if err != nil {
-        log.Fatalf("Unable to execute the query. %v", err)
+        log.Fatalf("Não foi possível executar a consulta. %v", err)
     }
 
-    // check how many rows affected
+    // verifique quantas linhas afetadas
     rowsAffected, err := res.RowsAffected()
 
     if err != nil {
-        log.Fatalf("Error while checking the affected rows. %v", err)
+        log.Fatalf("Erro ao verificar as linhas afetadas. %v", err)
     }
 
-    fmt.Printf("Total rows/record affected %v", rowsAffected)
+    fmt.Printf("Total de linhas/registro afetadod %v", rowsAffected)
 
     return rowsAffected
 }
