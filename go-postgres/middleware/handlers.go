@@ -2,127 +2,127 @@ package middleware
 
 import (
     "database/sql"
-    "encoding/json" // package to encode and decode the json into struct and vice versa
+    "encoding/json" // package para codificar e decodificar o json em struct e vice-versa
     "fmt"
-    "go-postgres/models" // models package where User schema is defined
+    "go-postgres/models" // models package onde o esquema do usuário é definido
     "log"
-    "net/http" // used to access the request and response object of the api
-    "os"       // used to read the environment variable
-    "strconv"  // package used to covert string into int type
+    "net/http" // usado para acessar o objeto de solicitação e resposta da API
+    "os"       // usado para ler a variável de ambiente
+    "strconv"  // package usado para converter string em tipo int
 
-    "github.com/gorilla/mux" // used to get the params from the route
+    "github.com/gorilla/mux" // usado para obter os parâmetros da rota
 
-    "github.com/joho/godotenv" // package used to read the .env file
-    _ "github.com/lib/pq"      // postgres golang driver
+    "github.com/joho/godotenv" // package usado para ler o arquivo .env
+    _ "github.com/lib/pq"      // driver postgres golang
 )
 
-// response format
+// formato de resposta
 type response struct {
     ID      int64  `json:"id,omitempty"`
     Message string `json:"message,omitempty"`
 }
 
-// create connection with postgres db
+// criar conexão com postgres db
 func createConnection() *sql.DB {
-    // load .env file
+    // carregar arquivo .env
     err := godotenv.Load(".env")
 
     if err != nil {
-        log.Fatalf("Error loading .env file")
+        log.Fatalf("Erro ao carregar o arquivo .env")
     }
 
-    // Open the connection
+    // Abrir a conexão
     db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
 
     if err != nil {
         panic(err)
     }
 
-    // check the connection
+    // verificando a conexão
     err = db.Ping()
 
     if err != nil {
         panic(err)
     }
 
-    fmt.Println("Successfully connected!")
-    // return the connection
+    fmt.Println("Conectado com sucesso!")
+    // retorno da conexão
     return db
 }
 
-// CreateUser create a user in the postgres db
+// CreateUser cria um usuário no banco de dados postgres
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-    // set the header to content type x-www-form-urlencoded
-    // Allow all origin to handle cors issue
+    // define o cabeçalho para o tipo de conteúdo x-www-form-urlencoded
+    //Permitir que todas as origens resolvam o problema do cors
     w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Header().Set("Access-Control-Allow-Methods", "POST")
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    // create an empty user of type models.User
+    // crie um usuário vazio do tipo models.User
     var user models.User
 
-    // decode the json request to user
+    // decodificar a solicitação json para o usuário
     err := json.NewDecoder(r.Body).Decode(&user)
 
     if err != nil {
-        log.Fatalf("Unable to decode the request body.  %v", err)
+        log.Fatalf("Não foi possível decodificar o corpo da solicitação.  %v", err)
     }
 
-    // call insert user function and pass the user
+    // chame a função de inserir usuário e passe o usuário
     insertID := insertUser(user)
 
-    // format a response object
+    // formatar um objeto de resposta
     res := response{
         ID:      insertID,
-        Message: "User created successfully",
+        Message: "Usuário criado com sucesso",
     }
 
-    // send the response
+    // envio da resposta
     json.NewEncoder(w).Encode(res)
 }
 
-// GetUser will return a single user by its id
+// GetUser retornará um único usuário por seu id
 func GetUser(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    // get the userid from the request params, key is "id"
+    // obtenha o ID do usuário dos parâmetros da solicitação, a chave é "id"
     params := mux.Vars(r)
 
-    // convert the id type from string to int
+    // converter o tipo de id de string para int
     id, err := strconv.Atoi(params["id"])
 
     if err != nil {
         log.Fatalf("Unable to convert the string into int.  %v", err)
     }
 
-    // call the getUser function with user id to retrieve a single user
+    // chama a função getUser com ID de usuário para recuperar um único usuário
     user, err := getUser(int64(id))
 
     if err != nil {
-        log.Fatalf("Unable to get user. %v", err)
+        log.Fatalf("Não foi possível obter o usuário. %v", err)
     }
 
-    // send the response
+    // envie a resposta
     json.NewEncoder(w).Encode(user)
 }
 
-// GetAllUser will return all the users
+// GetAllUser retornará todos os usuários
 func GetAllUser(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    // get all the users in the db
+    // obter todos os usuários no banco de dados
     users, err := getAllUsers()
 
     if err != nil {
-        log.Fatalf("Unable to get all user. %v", err)
+        log.Fatalf("Não foi possível obter todos os usuários. %v", err)
     }
 
-    // send all the users as response
+    // enviar todos os usuários como resposta
     json.NewEncoder(w).Encode(users)
 }
 
-// UpdateUser update user's detail in the postgres db
+// UpdateUser atualiza detalhes do usuário no banco de dados postgres
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
@@ -130,43 +130,43 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Methods", "PUT")
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    // get the userid from the request params, key is "id"
+    // obtenha o ID do usuário dos parâmetros de solicitação, a chave é "id"
     params := mux.Vars(r)
 
-    // convert the id type from string to int
+    // converter o tipo de id de string para int
     id, err := strconv.Atoi(params["id"])
 
     if err != nil {
-        log.Fatalf("Unable to convert the string into int.  %v", err)
+        log.Fatalf("Não foi possível converter a string em int.  %v", err)
     }
 
-    // create an empty user of type models.User
+    // crie um usuário vazio do tipo models.User
     var user models.User
 
-    // decode the json request to user
+    // decodificar a solicitação json para o usuário
     err = json.NewDecoder(r.Body).Decode(&user)
 
     if err != nil {
-        log.Fatalf("Unable to decode the request body.  %v", err)
+        log.Fatalf("Não foi possível decodificar o corpo da solicitação.  %v", err)
     }
 
-    // call update user to update the user
+    // chamar update user para atualizar o usuário
     updatedRows := updateUser(int64(id), user)
 
-    // format the message string
-    msg := fmt.Sprintf("User updated successfully. Total rows/record affected %v", updatedRows)
+    // formatar a string da mensagem
+    msg := fmt.Sprintf("Usuário atualizado com sucesso. Total de linhas/registros afetados %v", updatedRows)
 
-    // format the response message
+    // formatar a mensagem de resposta
     res := response{
         ID:      int64(id),
         Message: msg,
     }
 
-    // send the response
+    // envie a resposta
     json.NewEncoder(w).Encode(res)
 }
 
-// DeleteUser delete user's detail in the postgres db
+// DeleteUser exclui detalhes do usuário no banco de dados postgres
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
@@ -174,23 +174,23 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Methods", "DELETE")
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    // get the userid from the request params, key is "id"
+    // obtenha o ID do usuário dos parâmetros de solicitação, a chave é "id"
     params := mux.Vars(r)
 
-    // convert the id in string to int
+    // converta o id em string para int
     id, err := strconv.Atoi(params["id"])
 
     if err != nil {
-        log.Fatalf("Unable to convert the string into int.  %v", err)
+        log.Fatalf("Não foi possível converter a string em int.  %v", err)
     }
 
-    // call the deleteUser, convert the int to int64
+    // chame o deleteUser, converta o int em int64
     deletedRows := deleteUser(int64(id))
 
-    // format the message string
-    msg := fmt.Sprintf("User updated successfully. Total rows/record affected %v", deletedRows)
+    // formatar a string da mensagem
+    msg := fmt.Sprintf("Usuário atualizado com sucesso. Total de linhas/registros afetados %v", deletedRows)
 
-    // format the reponse message
+    // formatar a mensagem de resposta
     res := response{
         ID:      int64(id),
         Message: msg,
@@ -200,55 +200,55 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(res)
 }
 
-//------------------------- handler functions ----------------
-// insert one user in the DB
+//------------------------- funções de manipulador----------------
+// insira um usuário no banco de dados
 func insertUser(user models.User) int64 {
 
-    // create the postgres db connection
+    // crie a conexão postgres db
     db := createConnection()
 
-    // close the db connection
+    // feche a conexão db
     defer db.Close()
 
-    // create the insert sql query
-    // returning userid will return the id of the inserted user
+    // cria a consulta sql de inserção
+    // retornar o userid retornará o id do usuário inserido
     sqlStatement := `INSERT INTO users (name, location, age) VALUES ($1, $2, $3) RETURNING userid`
 
-    // the inserted id will store in this id
+    // o id inserido será armazenado neste id
     var id int64
 
-    // execute the sql statement
-    // Scan function will save the insert id in the id
+    //executa a instrução SQL
+    // A função de scaneamento salvará o ID de inserção no id
     err := db.QueryRow(sqlStatement, user.Name, user.Location, user.Age).Scan(&id)
 
     if err != nil {
-        log.Fatalf("Unable to execute the query. %v", err)
+        log.Fatalf("Não foi possível executar a consulta. %v", err)
     }
 
-    fmt.Printf("Inserted a single record %v", id)
+    fmt.Printf("Inseriu um único registro %v", id)
 
-    // return the inserted id
+    // retornar o id inserido
     return id
 }
 
-// get one user from the DB by its userid
+// obtenha um usuário do banco de dados por seu ID de usuário
 func getUser(id int64) (models.User, error) {
-    // create the postgres db connection
+    // crie a conexão postgres db
     db := createConnection()
 
-    // close the db connection
+    // feche a conexão db
     defer db.Close()
 
-    // create a user of models.User type
+    // crie um usuário de models.User type
     var user models.User
 
     // create the select sql query
     sqlStatement := `SELECT * FROM users WHERE userid=$1`
 
-    // execute the sql statement
+    // crie a consulta sql selecionada
     row := db.QueryRow(sqlStatement, id)
 
-    // unmarshal the row object to user
+    // desempacotar o objeto de linha para o usuário
     err := row.Scan(&user.ID, &user.Name, &user.Age, &user.Location)
 
     switch err {
