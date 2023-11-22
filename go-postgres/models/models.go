@@ -1,6 +1,6 @@
 package models
 
-// Esquema de usuário da tabela de usuários
+// Esquema de usuário da tabela users
 type User struct {
     ID       int64  `json:"id"`
     Name     string `json:"name"`
